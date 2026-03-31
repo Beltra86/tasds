@@ -95,7 +95,6 @@
     }
  
     #cronaca p {
-      text-shadow: 0 0 3px rgba(255, 255, 255, 0.7);
       margin: 4px 0;
       padding: 8px;
       border-radius: 6px;
@@ -171,7 +170,7 @@
     #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 10px; }
     .overlay-box { background: white; color: #0b2a4a; padding: 20px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; }
     #listaGiocatori { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 15px 0; }
-    #listaGiocatori button { color: white; padding: 12px 5px; border-radius: 8px; border: 2px solid #333; font-weight: bold; font-size: 13px; }
+    #listaGiocatori button { color: white; padding: 12px 5px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; }
  
     /* TABELLA PARTITA */
     #tabella-wrap {
@@ -333,7 +332,7 @@
   }
  
   const coloriBase = [
-    { hex: "#0000CD", name: "Blu"}, { hex: "#FF0000", name: "Rosso"}, { hex: "#D4A500", name: "Giallo" },
+    { hex: "#0000CD", name: "Blu"}, { hex: "#FF0000", name: "Rosso"}, { hex: "#FFFF00", name: "Giallo" },
     { hex: "#228B22", name: "Verde"}, { hex: "#800080", name: "Viola"}, { hex: "#531B00", name: "Marrone" }
   ];
  
