@@ -4,7 +4,146 @@
   <meta charset="UTF-8">
   <title>Tutti a Scuola da Sturla</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    /* RESET FONDAMENTALE PER CELLULARE */
+    * {
+      box-sizing: border-box; 
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #0b2a4a, #123e6d, #eaf4ff);
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero { 
+      width: 100%;
+      padding: 10px; 
+      text-align: center; 
+      background: #0b2a4a; 
+      border-bottom: 2px solid #f2c200; 
+      flex-shrink: 0;
+    }
+
+    .hero h1 { margin: 0; font-size: 18px; }
+    .hero span { color: #f2c200; }
+
+    #app { 
+      width: 100%;
+      max-width: 800px; 
+      margin: 0 auto; 
+      padding: 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      width: 100%;
+    }
+
+    /* GRIGLIA PULSANTI OTTIMIZZATA */
+    #pulsanti {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px; /* Ridotto il gap per risparmiare spazio */
+      margin-bottom: 10px;
+      flex-shrink: 0;
+    }
+
+    #pulsanti button {
+      background: linear-gradient(#f2c200, #d9a900);
+      color: #0b2a4a;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 1px;
+      font-size: 11px; /* Font leggermente più piccolo per evitare sforamenti */
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      white-space: nowrap; /* Evita che il testo vada a capo rompendo l'altezza */
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #cronaca {
+      background: #1a1a1a;
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid #0b2a4a;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0; 
+      width: 100%;
+    }
+
+    #cronaca p {
+      margin: 4px 0;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      border-left: 5px solid #ffffff;
+      animation: flashEntry 0.6s ease-out;
+      flex-shrink: 0;
+      word-wrap: break-word; /* Evita che testi lunghi escano dalla cronaca */
+    }
+
+    @keyframes flashEntry {
+      0% { background-color: #444; }
+      100% { background-color: transparent; }
+    }
+
+    /* OVERLAY E SETUP */
+    .hidden { display: none !important; }
+    .btn-start { background: #CCCCFF; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
+    .giocatore-row { display: flex; gap: 5px; margin-bottom: 8px; width: 100%; }
+    .giocatore-row input { flex: 1; padding: 10px; border-radius: 5px; border: none; min-width: 0; }
+    .select-colore { width: 200px; border-radius: 5px; border: 1px solid white; }
+
+    .select-colore option {
+      background-color: transparent; /* Rimuove il colore di sfondo predefinito */
+      border: none; /* Rimuove il bordo predefinito */
+      color: white; /* Colore del testo */
+      padding: 10px;
+    }
+
+    .select-colore option:hover {
+      background-color: #333; /* Colore di hover per migliorare l'interazione */
+    }
+
+    .select-colore option {
+      padding-left: 10px; /* Distanza tra il quadrato e il nome del colore */
+    }
+
+    #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 10px; }
+    .overlay-box { background: white; color: #0b2a4a; padding: 20px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; }
+    #listaGiocatori { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 15px 0; }
+    #listaGiocatori button { color: white; padding: 12px 5px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; }
+
+    /* MEDIA QUERY PER CELLULARI STRETTI */
+    @media (max-width: 400px) {
+      #pulsanti { grid-template-columns: repeat(3, 1fr); }
+      .hero h1 { font-size: 16px; }
+    }
+  </style>
 </head>
 <body>
 
@@ -57,289 +196,146 @@
   </div>
 </div>
 
-<script src="script.js"></script>
-</body>
-</html>
+<script>
+  let giocatori = [];
+  let frasi = null;
+  let eventoAttivo = null;
+  let audioQueue = [];
+  let isPlaying = false;
 
-/* RESET FONDAMENTALE PER CELLULARE */
-* {
-  box-sizing: border-box; 
-}
+  const coloriBase = [
+    { hex: "#0000CD", name: "Blu"}, { hex: "#FF0000", name: "Rosso"}, { hex: "#FFFF00", name: "Giallo" },
+    { hex: "#228B22", name: "Verde"}, { hex: "#800080", name: "Viola"}, { hex: "#531B00", name: "Marrone" }
+  ];
 
-html, body {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
+  const sections = {
+    home: document.getElementById("home"),
+    setup: document.getElementById("setup"),
+    partita: document.getElementById("partita")
+  };
 
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(to bottom, #0b2a4a, #123e6d, #eaf4ff);
-  color: white;
-  display: flex;
-  flex-direction: column;
-}
+  const cronaca = document.getElementById("cronaca");
+  const overlay = document.getElementById("overlay");
+  const containerGiocatori = document.getElementById("lista-input-giocatori");
 
-.hero { 
-  width: 100%;
-  padding: 10px; 
-  text-align: center; 
-  background: #0b2a4a; 
-  border-bottom: 2px solid #f2c200; 
-  flex-shrink: 0;
-}
+  fetch("frasi.json")
+    .then(r => r.json())
+    .then(data => { frasi = data; })
+    .catch(err => console.error("Errore JSON:", err));
 
-.hero h1 { margin: 0; font-size: 18px; }
-.hero span { color: #f2c200; }
-
-#app { 
-  width: 100%;
-  max-width: 800px; 
-  margin: 0 auto; 
-  padding: 10px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.main-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  width: 100%;
-}
-
-/* GRIGLIA PULSANTI OTTIMIZZATA */
-#pulsanti {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px; /* Ridotto il gap per risparmiare spazio */
-  margin-bottom: 10px;
-  flex-shrink: 0;
-}
-
-#pulsanti button {
-  background: linear-gradient(#f2c200, #d9a900);
-  color: #0b2a4a;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 1px;
-  font-size: 11px; /* Font leggermente più piccolo per evitare sforamenti */
-  font-weight: bold;
-  cursor: pointer;
-  text-transform: uppercase;
-  white-space: nowrap; /* Evita che il testo vada a capo rompendo l'altezza */
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#cronaca {
-  background: #1a1a1a;
-  padding: 10px;
-  border-radius: 12px;
-  border: 2px solid #0b2a4a;
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0; 
-  width: 100%;
-}
-
-#cronaca p {
-  margin: 4px 0;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: bold;
-  border-left: 5px solid #ffffff;
-  animation: flashEntry 0.6s ease-out;
-  flex-shrink: 0;
-  word-wrap: break-word; /* Evita che testi lunghi escano dalla cronaca */
-}
-
-@keyframes flashEntry {
-  0% { background-color: #444; }
-  100% { background-color: transparent; }
-}
-
-/* OVERLAY E SETUP */
-.hidden { display: none !important; }
-.btn-start { background: #CCCCFF; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
-.giocatore-row { display: flex; gap: 5px; margin-bottom: 8px; width: 100%; }
-.giocatore-row input { flex: 1; padding: 10px; border-radius: 5px; border: none; min-width: 0; }
-.select-colore { width: 200px; border-radius: 5px; border: 1px solid white; }
-
-.select-colore option {
-  background-color: transparent; /* Rimuove il colore di sfondo predefinito */
-  border: none; /* Rimuove il bordo predefinito */
-  color: white; /* Colore del testo */
-  padding: 10px;
-}
-
-.select-colore option:hover {
-  background-color: #333; /* Colore di hover per migliorare l'interazione */
-}
-
-.select-colore option {
-  padding-left: 10px; /* Distanza tra il quadrato e il nome del colore */
-}
-
-#overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 10px; }
-.overlay-box { background: white; color: #0b2a4a; padding: 20px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; }
-#listaGiocatori { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 15px 0; }
-#listaGiocatori button { color: white; padding: 12px 5px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; }
-
-/* MEDIA QUERY PER CELLULARI STRETTI */
-@media (max-width: 400px) {
-  #pulsanti { grid-template-columns: repeat(3, 1fr); }
-  .hero h1 { font-size: 16px; }
-}
-
-let giocatori = [];
-let frasi = null;
-let eventoAttivo = null;
-let audioQueue = [];
-let isPlaying = false;
-
-const coloriBase = [
-  { hex: "#0000CD", name: "Blu"}, { hex: "#FF0000", name: "Rosso"}, { hex: "#FFFF00", name: "Giallo" },
-  { hex: "#228B22", name: "Verde"}, { hex: "#800080", name: "Viola"}, { hex: "#531B00", name: "Marrone" }
-];
-
-const sections = {
-  home: document.getElementById("home"),
-  setup: document.getElementById("setup"),
-  partita: document.getElementById("partita")
-};
-
-const cronaca = document.getElementById("cronaca");
-const overlay = document.getElementById("overlay");
-const containerGiocatori = document.getElementById("lista-input-giocatori");
-
-fetch("frasi.json")
-  .then(r => r.json())
-  .then(data => { frasi = data; })
-  .catch(err => console.error("Errore JSON:", err));
-
-function mostraSezione(nome) {
-  Object.values(sections).forEach(s => s.classList.add("hidden"));
-  sections[nome].classList.remove("hidden");
-  if(nome === 'setup' && containerGiocatori.children.length === 0) {
-      creaCampoGiocatore();
-      creaCampoGiocatore();
+  function mostraSezione(nome) {
+    Object.values(sections).forEach(s => s.classList.add("hidden"));
+    sections[nome].classList.remove("hidden");
+    if(nome === 'setup' && containerGiocatori.children.length === 0) {
+        creaCampoGiocatore();
+        creaCampoGiocatore();
+    }
   }
-}
 
-document.getElementById("globalNuovaPartita").onclick = () => {
-  if (confirm("Iniziare una nuova partita?")) {
-    cronaca.innerHTML = "";
-    containerGiocatori.innerHTML = "";
-    audioQueue = [];
-    mostraSezione("setup");
-  }
-};
-
-function creaCampoGiocatore() {
-  const div = document.createElement("div");
-  div.className = "giocatore-row";
-  const index = containerGiocatori.children.length;
-  const colDefault = coloriBase[index % coloriBase.length].hex;
-  const nomeColoreDefault = coloriBase[index % coloriBase.length].name; // Nome del colore
-
-  
-  div.innerHTML = `
-        <input type="text" placeholder="Nome">
-    <select class="select-colore" style="background:${colDefault};" onchange="this.style.background=this.value;">
-      ${coloriBase.map(c => `
-        <option value="${c.hex}" ${c.hex === colDefault ? 'selected' : ''} style="background:${c.hex};">
-          ${c.name} - ${c.hex} <!-- Aggiungi il nome del colore -->
-        </option>`).join("")}
-    </select>
-    <button type="button" style="background:#d62828; color:white; border:none; border-radius:5px; width:35px;" onclick="this.parentElement.remove()">×</button>
-  `;
-  containerGiocatori.appendChild(div);
-}
-
-document.getElementById("btn-aggiungi-input").onclick = () => creaCampoGiocatore();
-
-document.getElementById("avvia").onclick = () => {
-  giocatori = [...containerGiocatori.querySelectorAll(".giocatore-row")].map(row => ({
-    nome: row.querySelector("input").value.trim(),
-    colore: row.querySelector(".select-colore").value
-  })).filter(g => g.nome !== "");
-  if (giocatori.length === 0) return alert("Aggiungi giocatori!");
-  mostraSezione("partita");
-};
-
-document.querySelectorAll("#pulsanti button").forEach(btn => {
-  btn.onclick = () => {
-    const ev = btn.getAttribute("data-evento");
-    if (ev === "partenza" || ev === "vario") {
-      aggiungiCronaca(ev, null);
-    } else {
-      eventoAttivo = ev;
-      apriOverlayGiocatori();
+  document.getElementById("globalNuovaPartita").onclick = () => {
+    if (confirm("Iniziare una nuova partita?")) {
+      cronaca.innerHTML = "";
+      containerGiocatori.innerHTML = "";
+      audioQueue = [];
+      mostraSezione("setup");
     }
   };
-});
 
-function apriOverlayGiocatori() {
-  const lista = document.getElementById("listaGiocatori");
-  lista.innerHTML = "";
-  giocatori.forEach(g => {
-    const b = document.createElement("button");
-    b.textContent = g.nome;
-    b.style.backgroundColor = g.colore;
-    b.onclick = () => {
-      overlay.classList.add("hidden");
-      aggiungiCronaca(eventoAttivo, g);
+  function creaCampoGiocatore() {
+    const div = document.createElement("div");
+    div.className = "giocatore-row";
+    const index = containerGiocatori.children.length;
+    const colDefault = coloriBase[index % coloriBase.length].hex;
+    const nomeColoreDefault = coloriBase[index % coloriBase.length].name; // Nome del colore
+
+    div.innerHTML = `
+          <input type="text" placeholder="Nome">
+      <select class="select-colore" style="background:${colDefault};" onchange="this.style.background=this.value;">
+        ${coloriBase.map(c => `
+          <option value="${c.hex}" ${c.hex === colDefault ? 'selected' : ''} style="background:${c.hex};">
+            ${c.name} - ${c.hex} <!-- Aggiungi il nome del colore -->
+          </option>`).join("")}
+      </select>
+      <button type="button" style="background:#d62828; color:white; border:none; border-radius:5px; width:35px;" onclick="this.parentElement.remove()">×</button>
+    `;
+    containerGiocatori.appendChild(div);
+  }
+
+  document.getElementById("btn-aggiungi-input").onclick = () => creaCampoGiocatore();
+
+  document.getElementById("avvia").onclick = () => {
+    giocatori = [...containerGiocatori.querySelectorAll(".giocatore-row")].map(row => ({
+      nome: row.querySelector("input").value.trim(),
+      colore: row.querySelector(".select-colore").value
+    })).filter(g => g.nome !== "");
+    if (giocatori.length === 0) return alert("Aggiungi giocatori!");
+    mostraSezione("partita");
+  };
+
+  document.querySelectorAll("#pulsanti button").forEach(btn => {
+    btn.onclick = () => {
+      const ev = btn.getAttribute("data-evento");
+      if (ev === "partenza" || ev === "vario") {
+        aggiungiCronaca(ev, null);
+      } else {
+        eventoAttivo = ev;
+        apriOverlayGiocatori();
+      }
     };
-    lista.appendChild(b);
   });
-  overlay.classList.remove("hidden");
-}
 
-function aggiungiCronaca(evento, giocatoreObj) {
-  if (!frasi || !frasi[evento]) return;
-  const set = frasi[evento];
-  const frase = set[Math.floor(Math.random() * set.length)];
-  const p = document.createElement("p");
-  
-  if (giocatoreObj) {
-    p.textContent = `${giocatoreObj.nome} ${frase}`;
-    p.style.color = giocatoreObj.colore;
-    p.style.borderLeftColor = giocatoreObj.colore;
-  } else {
-    p.textContent = frase;
-    p.style.color = "#ffffff";
-    p.style.borderLeftColor = "#ffffff";
+  function apriOverlayGiocatori() {
+    const lista = document.getElementById("listaGiocatori");
+    lista.innerHTML = "";
+    giocatori.forEach(g => {
+      const b = document.createElement("button");
+      b.textContent = g.nome;
+      b.style.backgroundColor = g.colore;
+      b.onclick = () => {
+        overlay.classList.add("hidden");
+        aggiungiCronaca(eventoAttivo, g);
+      };
+      lista.appendChild(b);
+    });
+    overlay.classList.remove("hidden");
   }
-  
-  cronaca.appendChild(p);
-  cronaca.scrollTop = cronaca.scrollHeight;
 
-  if (frasi.audioCounts && frasi.audioCounts[evento]) {
-    const n = Math.floor(Math.random() * frasi.audioCounts[evento]) + 1;
-    const nFormattato = n.toString().padStart(2, '0');
-    audioQueue.push(`audio/${evento}/${evento}-${nFormattato}.mp3`);
-    if (!isPlaying) playNextAudio();
+  function aggiungiCronaca(evento, giocatoreObj) {
+    if (!frasi || !frasi[evento]) return;
+    const set = frasi[evento];
+    const frase = set[Math.floor(Math.random() * set.length)];
+    const p = document.createElement("p");
+    
+    if (giocatoreObj) {
+      p.textContent = `${giocatoreObj.nome} ${frase}`;
+      p.style.color = giocatoreObj.colore;
+      p.style.borderLeftColor = giocatoreObj.colore;
+    } else {
+      p.textContent = frase;
+      p.style.color = "#ffffff";
+      p.style.borderLeftColor = "#ffffff";
+    }
+    
+    cronaca.appendChild(p);
+    cronaca.scrollTop = cronaca.scrollHeight;
+
+    if (frasi.audioCounts && frasi.audioCounts[evento]) {
+      const n = Math.floor(Math.random() * frasi.audioCounts[evento]) + 1;
+      const nFormattato = n.toString().padStart(2, '0');
+      audioQueue.push(`audio/${evento}/${evento}-${nFormattato}.mp3`);
+      if (!isPlaying) playNextAudio();
+    }
   }
-}
 
-function playNextAudio() {
-  if (audioQueue.length === 0) { isPlaying = false; return; }
-  isPlaying = true;
-  const audio = new Audio(audioQueue.shift());
-  audio.onended = playNextAudio;
-  audio.play().catch(() => playNextAudio());
-}
+  function playNextAudio() {
+    if (audioQueue.length === 0) { isPlaying = false; return; }
+    isPlaying = true;
+    const audio = new Audio(audioQueue.shift());
+    audio.onended = playNextAudio;
+    audio.play().catch(() => playNextAudio());
+  }
 
-document.getElementById("annulla").onclick = () => overlay.classList.add("hidden");
-
-
-
+  document.getElementById("annulla").onclick = () => overlay.classList.add("hidden");
+</script>
+</body>
+</html>
