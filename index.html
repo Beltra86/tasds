@@ -185,6 +185,7 @@
       font-size: 12px;
       width: auto;
       table-layout: auto;
+      margin: 0 auto;
     }
  
     #tabella-partita td {
@@ -242,11 +243,11 @@
       color: #ef5350;
     }
  
-    /* Colori valori */
-    td.cella-scatto .cella-valore    { color: #4fc3f7; }
-    td.cella-crisi .cella-valore     { color: #ef5350; }
-    td.cella-punteggio .cella-valore { color: #ffffff; }
-    td.cella-vittoria .cella-valore  { color: #f2c200; }
+    /* Colori valori — sovrascrivibili inline per colore giocatore */
+    td.cella-scatto .cella-valore    { font-weight: bold; }
+    td.cella-crisi .cella-valore     { font-weight: bold; }
+    td.cella-punteggio .cella-valore { font-weight: bold; }
+    td.cella-vittoria .cella-valore  { font-weight: bold; }
  
     @media (max-width: 400px) {
       #pulsanti { grid-template-columns: repeat(3, 1fr); }
@@ -296,7 +297,7 @@
       <button data-evento="5">5</button>
       <button data-evento="scatto">Scatto</button>
       <button data-evento="crisi">Crisi</button>
-      <button data-evento="vittoria">Vittoria</button>
+      <button data-evento="vittoria">Arrivo</button>
       <button data-evento="vario">Vario</button>
     </div>
  
@@ -464,7 +465,9 @@
       }
     }
  
-    if (frasi.audioCounts && frasi.audioCounts[evento]) {
+    // Audio: per "vittoria" solo se è il primo arrivato (contatoreVittoria === 1 dopo l'aggiornamento)
+    const skipAudio = evento === "vittoria" && contatoreVittoria > 1;
+    if (!skipAudio && frasi.audioCounts && frasi.audioCounts[evento]) {
       const n = Math.floor(Math.random() * frasi.audioCounts[evento]) + 1;
       const nFormattato = n.toString().padStart(2, '0');
       audioQueue.push(`audio/${evento}/${evento}-${nFormattato}.mp3`);
@@ -543,7 +546,7 @@
     contatoreVittoria = cnt;
   }
  
-  function scriviCella(cella, classeColore, valore) {
+  function scriviCella(cella, classeColore, valore, coloreGiocatore) {
     cella.className = classeColore;
     cella.dataset.valore = valore;
     cella.innerHTML = "";
@@ -552,6 +555,7 @@
     const span = document.createElement("span");
     span.className = "cella-valore";
     span.textContent = valore;
+    if (coloreGiocatore) span.style.color = coloreGiocatore;
     const btnX = document.createElement("button");
     btnX.className = "btn-cancella";
     btnX.textContent = "×";
@@ -584,24 +588,16 @@
   }
  
   function riassegnaVittorie() {
-    // Raccoglie le celle arrivo che hanno ancora un valore e le riordina
     const righe = righeTabella();
     const rigaArrivoIdx = righe.findIndex(r => r.tipo === "arrivo");
     const celle = giocatori.map((_, i) => document.getElementById(`cella-${i}-r${rigaArrivoIdx}`));
-    // Trova quelle compilate, in ordine di posizione attuale
     const compilate = celle.filter(c => c && c.dataset.valore);
-    // Ordina per il numero della posizione già scritta (1°, 2°...)
-    compilate.sort((a, b) => {
-      const na = parseInt(a.dataset.valore);
-      const nb = parseInt(b.dataset.valore);
-      return na - nb;
-    });
-    // Azzera tutte le celle arrivo
+    compilate.sort((a, b) => parseInt(a.dataset.valore) - parseInt(b.dataset.valore));
     celle.forEach(c => { if (c) { c.className = ""; c.dataset.valore = ""; c.innerHTML = ""; } });
-    // Riassegna le posizioni in ordine
     const pos = ["1°","2°","3°","4°","5°","6°"];
     compilate.forEach((c, i) => {
-      scriviCella(c, "cella-vittoria", pos[i] || `${i+1}°`);
+      const gIdx = parseInt(c.id.split("-")[1]);
+      scriviCella(c, "cella-vittoria", pos[i] || `${i+1}°`, giocatori[gIdx].colore);
     });
     contatoreVittoria = compilate.length;
   }
@@ -643,6 +639,7 @@
  
   function aggiornaCellaTabella(gIdx, tipo, valore) {
     const righe = righeTabella();
+    const colore = giocatori[gIdx].colore;
  
     if (tipo === "scatto" || tipo === "crisi") {
       const indiceGiro = statoGiocatori[gIdx].poligoniCompletati;
@@ -650,7 +647,7 @@
       if (rigaIdx === -1) return;
       const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
       if (!cella) return;
-      scriviCella(cella, valore === "S" ? "cella-scatto" : "cella-crisi", valore);
+      scriviCella(cella, valore === "S" ? "cella-scatto" : "cella-crisi", valore, colore);
  
     } else if (tipo === "poligono") {
       const indice = statoGiocatori[gIdx].poligoniCompletati;
@@ -659,17 +656,17 @@
       if (rigaIdx === -1) return;
       const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
       if (!cella) return;
-      scriviCella(cella, "cella-punteggio", valore);
+      scriviCella(cella, "cella-punteggio", valore, colore);
       statoGiocatori[gIdx].poligoniCompletati++;
  
     } else if (tipo === "vittoria") {
       const rigaIdx = righe.findIndex(r => r.tipo === "arrivo");
       if (rigaIdx === -1) return;
       const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
-      if (!cella || cella.dataset.valore) return; // già compilata
+      if (!cella || cella.dataset.valore) return;
       contatoreVittoria++;
       const pos = ["1°","2°","3°","4°","5°","6°"];
-      scriviCella(cella, "cella-vittoria", pos[contatoreVittoria - 1] || `${contatoreVittoria}°`);
+      scriviCella(cella, "cella-vittoria", pos[contatoreVittoria - 1] || `${contatoreVittoria}°`, colore);
     }
   }
  
@@ -677,3 +674,4 @@
 </script>
 </body>
 </html>
+ 
