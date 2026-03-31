@@ -1,6 +1,3 @@
-Index · HTML
-Copia
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -175,7 +172,57 @@ Copia
     #listaGiocatori { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 15px 0; }
     #listaGiocatori button { color: white; padding: 12px 5px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; }
  
-    /* MEDIA QUERY PER CELLULARI STRETTI */
+    /* TABELLA PARTITA */
+    #tabella-wrap {
+      overflow-x: auto;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+      border-radius: 8px;
+    }
+ 
+    #tabella-partita {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      min-width: 200px;
+    }
+ 
+    #tabella-partita th,
+    #tabella-partita td {
+      border: 1px solid #2a4a6a;
+      padding: 5px 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+ 
+    #tabella-partita th {
+      background: #0b2a4a;
+      font-weight: bold;
+      font-size: 11px;
+    }
+ 
+    #tabella-partita td:first-child {
+      background: #0b2a4a;
+      font-weight: bold;
+      text-align: left;
+      padding-left: 7px;
+      color: #f2c200;
+    }
+ 
+    #tabella-partita tr.riga-poligono td {
+      background: rgba(242, 194, 0, 0.08);
+    }
+ 
+    #tabella-partita tr.riga-arrivo td {
+      background: rgba(255, 255, 255, 0.07);
+      font-weight: bold;
+    }
+ 
+    #tabella-partita td.cella-scatto { color: #4fc3f7; font-weight: bold; }
+    #tabella-partita td.cella-crisi  { color: #ef5350; font-weight: bold; }
+    #tabella-partita td.cella-punteggio { color: #ffffff; font-weight: bold; }
+    #tabella-partita td.cella-vittoria { color: #f2c200; font-weight: bold; }
+ 
     @media (max-width: 400px) {
       #pulsanti { grid-template-columns: repeat(3, 1fr); }
       .hero h1 { font-size: 16px; }
@@ -226,6 +273,10 @@ Copia
       <button data-evento="crisi">Crisi</button>
       <button data-evento="vittoria">Vittoria</button>
       <button data-evento="vario">Vario</button>
+    </div>
+ 
+    <div id="tabella-wrap">
+      <table id="tabella-partita"></table>
     </div>
  
     <div id="cronaca"></div>
@@ -288,6 +339,9 @@ Copia
       cronaca.innerHTML = "";
       containerGiocatori.innerHTML = "";
       audioQueue = [];
+      document.getElementById("tabella-partita").innerHTML = "";
+      statoGiocatori = [];
+      contatoreVittoria = 0;
       mostraSezione("setup");
     }
   };
@@ -303,8 +357,8 @@ Copia
           <input type="text" placeholder="Nome">
       <select class="select-colore" style="background:${colDefault}; color:#000000;" onchange="this.style.background=this.value;">
         ${coloriBase.map(c => `
-          <option value="${c.hex}" ${c.hex === colDefault ? 'selected' : ''} style="background:${c.hex};">
-            &nbsp;
+          <option value="${c.hex}" ${c.hex === colDefault ? 'selected' : ''} style="background:${c.hex}; color:#000000;">
+            ${c.name}
           </option>`).join("")}
       </select>
       <button type="button" style="background:#d62828; color:white; border:none; border-radius:5px; width:35px;" onclick="this.parentElement.remove()">×</button>
@@ -320,6 +374,7 @@ Copia
       colore: row.querySelector(".select-colore").value
     })).filter(g => g.nome !== "");
     if (giocatori.length === 0) return alert("Aggiungi giocatori!");
+    inizializzaTabella();
     mostraSezione("partita");
   };
  
@@ -370,6 +425,20 @@ Copia
     cronaca.appendChild(p);
     cronaca.scrollTop = cronaca.scrollHeight;
  
+    // Aggiorna tabella
+    if (giocatoreObj) {
+      const gIdx = giocatori.indexOf(giocatoreObj);
+      if (evento === "scatto") {
+        aggiornaCellaTabella(gIdx, "scatto", "S");
+      } else if (evento === "crisi") {
+        aggiornaCellaTabella(gIdx, "crisi", "C");
+      } else if (["0","1","2","3","4","5"].includes(evento)) {
+        aggiornaCellaTabella(gIdx, "poligono", evento);
+      } else if (evento === "vittoria") {
+        aggiornaCellaTabella(gIdx, "vittoria", "");
+      }
+    }
+ 
     if (frasi.audioCounts && frasi.audioCounts[evento]) {
       const n = Math.floor(Math.random() * frasi.audioCounts[evento]) + 1;
       const nFormattato = n.toString().padStart(2, '0');
@@ -384,6 +453,120 @@ Copia
     const audio = new Audio(audioQueue.shift());
     audio.onended = playNextAudio;
     audio.play().catch(() => playNextAudio());
+  }
+ 
+  // --- LOGICA TABELLA ---
+ 
+  // Stato per ogni giocatore: quanti poligoni ha completato, quanti giri ha completato
+  let statoGiocatori = [];
+  let contatoreVittoria = 0;
+ 
+  function righeTabella() {
+    if (numPoligoni === 2) {
+      return [
+        { label: "Giocatori", tipo: "intestazione" },
+        { label: "Giro 1",    tipo: "giro",      indice: 0 },
+        { label: "Poligono 1",tipo: "poligono",  indice: 0 },
+        { label: "Giro 2",    tipo: "giro",      indice: 1 },
+        { label: "Poligono 2",tipo: "poligono",  indice: 1 },
+        { label: "Giro 3",    tipo: "giro",      indice: 2 },
+        { label: "Arrivo",    tipo: "arrivo"               }
+      ];
+    } else {
+      return [
+        { label: "Giocatori", tipo: "intestazione" },
+        { label: "Giro 1",    tipo: "giro",      indice: 0 },
+        { label: "Poligono 1",tipo: "poligono",  indice: 0 },
+        { label: "Giro 2",    tipo: "giro",      indice: 1 },
+        { label: "Poligono 2",tipo: "poligono",  indice: 1 },
+        { label: "Giro 3",    tipo: "giro",      indice: 2 },
+        { label: "Poligono 3",tipo: "poligono",  indice: 2 },
+        { label: "Giro 4",    tipo: "giro",      indice: 3 },
+        { label: "Poligono 4",tipo: "poligono",  indice: 3 },
+        { label: "Giro 5",    tipo: "giro",      indice: 4 },
+        { label: "Arrivo",    tipo: "arrivo"               }
+      ];
+    }
+  }
+ 
+  function inizializzaTabella() {
+    contatoreVittoria = 0;
+    statoGiocatori = giocatori.map(() => ({
+      poligoniCompletati: 0,  // quanti poligoni ha completato
+      giriCoperti: 0          // quanti giri ha avuto un evento (scatto/crisi)
+    }));
+ 
+    const tabella = document.getElementById("tabella-partita");
+    tabella.innerHTML = "";
+    const righe = righeTabella();
+ 
+    righe.forEach((riga, rigaIdx) => {
+      const tr = document.createElement("tr");
+ 
+      if (riga.tipo === "poligono") tr.classList.add("riga-poligono");
+      if (riga.tipo === "arrivo")   tr.classList.add("riga-arrivo");
+ 
+      // Prima colonna: etichetta riga
+      const tdLabel = document.createElement("td");
+      tdLabel.textContent = riga.label;
+      tr.appendChild(tdLabel);
+ 
+      // Colonne giocatori
+      giocatori.forEach((g, gIdx) => {
+        const td = document.createElement("td");
+        // Nella riga intestazione mettiamo il nome del giocatore
+        if (riga.tipo === "intestazione") {
+          td.textContent = g.nome;
+          td.style.color = g.colore;
+          td.style.fontWeight = "bold";
+        }
+        // ID univoco per trovare la cella facilmente
+        td.id = `cella-${gIdx}-r${rigaIdx}`;
+        tr.appendChild(td);
+      });
+ 
+      tabella.appendChild(tr);
+    });
+  }
+ 
+  function aggiornaCellaTabella(gIdx, tipo, valore) {
+    const righe = righeTabella();
+ 
+    if (tipo === "scatto" || tipo === "crisi") {
+      // Il giro da compilare è il successivo all'ultimo poligono completato
+      // poligoniCompletati = 0 → Giro 1 (indice giro 0)
+      // poligoniCompletati = 1 → Giro 2 (indice giro 1) ecc.
+      const indiceGiro = statoGiocatori[gIdx].poligoniCompletati;
+      // Trova la riga "giro" con quell'indice
+      const rigaIdx = righe.findIndex(r => r.tipo === "giro" && r.indice === indiceGiro);
+      if (rigaIdx === -1) return;
+      const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
+      if (!cella) return;
+      cella.textContent = valore; // "S" o "C"
+      cella.className = valore === "S" ? "cella-scatto" : "cella-crisi";
+ 
+    } else if (tipo === "poligono") {
+      // Compila il primo poligono libero per questo giocatore
+      const indice = statoGiocatori[gIdx].poligoniCompletati;
+      if (indice >= numPoligoni) return; // tutti i poligoni già completati
+      const rigaIdx = righe.findIndex(r => r.tipo === "poligono" && r.indice === indice);
+      if (rigaIdx === -1) return;
+      const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
+      if (!cella) return;
+      cella.textContent = valore; // es. "3"
+      cella.className = "cella-punteggio";
+      statoGiocatori[gIdx].poligoniCompletati++;
+ 
+    } else if (tipo === "vittoria") {
+      const rigaIdx = righe.findIndex(r => r.tipo === "arrivo");
+      if (rigaIdx === -1) return;
+      const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
+      if (!cella) return;
+      contatoreVittoria++;
+      const pos = ["1°","2°","3°","4°","5°","6°"];
+      cella.textContent = pos[contatoreVittoria - 1] || `${contatoreVittoria}°`;
+      cella.className = "cella-vittoria";
+    }
   }
  
   document.getElementById("annulla").onclick = () => overlay.classList.add("hidden");
