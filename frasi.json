@@ -10,6 +10,7 @@
   "crisi": ["è in crisi totale", ", le gambe non girano più.", "deve essere caduto" , "non va avanti neanche a spingerlo" , "non è competitivo sugli sci"],
   "vittoria": ["vince la gara!", "trionfa sul traguardo!", "trionfa con autorità" , "mette a segno un'altra vittoria" , "è il migliore di oggi"],
   "vario": ["Vedremo chi avrà i materiali migliori oggi", "Il pubblico incita i corridori!", "Tutti sotto al tendone!!!" , "Fa molto freddo" , "Nel biathlon la coperta è corta" ],
+  "finegara": ["giunge al traguardo", "completa la gara", "saluta il pubblico" , "conclude la sua prestazione" , "termina la prova" ],
   "audioCounts": {
     "partenza": 4,
     "0": 17,
