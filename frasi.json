@@ -1,0 +1,32 @@
+{
+  "partenza": ["La gara è partita!", "Si parte!", "Tutti in pista!", "Si va!", "Buona fortuna a tutti!"],
+  "0": ["non sbagli nulla.", ", zero errori!", ", poligono immacolato.", "è un cecchino", "è un professore della piazzola", "è una sentenza"],
+  "1": ["commette un errore.", "ne lascia uno aperto.", "si fa una gita nel giro di penalità", "è quasi perfetto", "se la cava con un errore"],
+  "2": ["fa due errori!", ", che serie complicata! Due errori.", "non si poteva permettere due errori", ", doppio giro di penalità", "fa una mezzo disastro e ne sbaglia due"],
+  "3": [", tre errori pesanti!", ", il poligono è stregato: 3 errori.", "non ci capisce granchè", "si fa tre giri di penalità", "spara ai cervi"],
+  "4": [", quattro errori... disastro!", "sbaglia quasi tutto: 4 errori.", "cosa aveva nel cervello?", "faceva meglio ad andare a pescare"],
+  "5": [", cinque errori! Giro di penalità infinito!", ", buio totale: 0 su 5.", "fa il big fiveeeeeeeeeee!", "deve aver sparato in un altro poligono", "sembra Lampic"],
+  "scatto": ["piazza uno scatto devastante!", "aumenta il ritmo!", "prova l'allungo", "apre il gas", "fa il vuoto"],
+  "crisi": ["è in crisi totale", ", le gambe non girano più.", "deve essere caduto" , "non va avanti neanche a spingerlo" , "non è competitivo sugli sci"],
+  "vittoria": ["vince la gara!", "trionfa sul traguardo!", "trionfa con autorità" , "mette a segno un'altra vittoria" , "è il migliore di oggi"],
+  "vario": ["Vedremo chi avrà i materiali migliori oggi", "Il pubblico incita i corridori!", "Tutti sotto al tendone!!!" , "Fa molto freddo" , "Nel biathlon la coperta è corta" ],
+  "audioCounts": {
+    "partenza": 4,
+    "0": 17,
+    "1": 9,
+    "2": 7,
+    "3": 4,
+    "4": 4,
+    "5": 3,
+    "scatto": 12,
+    "crisi": 11,
+    "vittoria": 9,
+    "vario": 14
+  }
+}
+
+
+
+
+
+
