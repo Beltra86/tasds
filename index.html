@@ -433,8 +433,28 @@
   }
  
   function aggiungiCronaca(evento, giocatoreObj) {
-    if (!frasi || !frasi[evento]) return;
-    const set = frasi[evento];
+    let eventoPerFrase = evento;
+    
+    // Aggiorna tabella PRIMA (così contatoreVittoria è aggiornato)
+    if (giocatoreObj) {
+      const gIdx = giocatori.indexOf(giocatoreObj);
+      if (evento === "scatto") {
+        aggiornaCellaTabella(gIdx, "scatto", "S");
+      } else if (evento === "crisi") {
+        aggiornaCellaTabella(gIdx, "crisi", "C");
+      } else if (["0","1","2","3","4","5"].includes(evento)) {
+        aggiornaCellaTabella(gIdx, "poligono", evento);
+      } else if (evento === "vittoria") {
+        aggiornaCellaTabella(gIdx, "vittoria", "");
+        // Dopo aggiornamento, contatoreVittoria è stato incrementato
+        // Se è il primo (contatoreVittoria === 1), usa "vittoria", altrimenti "finegara"
+        eventoPerFrase = contatoreVittoria === 1 ? "vittoria" : "finegara";
+      }
+    }
+    
+    // Ora seleziona la frase
+    if (!frasi || !frasi[eventoPerFrase]) return;
+    const set = frasi[eventoPerFrase];
     const frase = set[Math.floor(Math.random() * set.length)];
     const p = document.createElement("p");
     
@@ -451,21 +471,7 @@
     cronaca.appendChild(p);
     cronaca.scrollTop = cronaca.scrollHeight;
  
-    // Aggiorna tabella
-    if (giocatoreObj) {
-      const gIdx = giocatori.indexOf(giocatoreObj);
-      if (evento === "scatto") {
-        aggiornaCellaTabella(gIdx, "scatto", "S");
-      } else if (evento === "crisi") {
-        aggiornaCellaTabella(gIdx, "crisi", "C");
-      } else if (["0","1","2","3","4","5"].includes(evento)) {
-        aggiornaCellaTabella(gIdx, "poligono", evento);
-      } else if (evento === "vittoria") {
-        aggiornaCellaTabella(gIdx, "vittoria", "");
-      }
-    }
- 
-    // Audio: per "vittoria" solo se è il primo arrivato (contatoreVittoria === 1 dopo l'aggiornamento)
+    // Audio: per "vittoria" solo se è il primo arrivato
     const skipAudio = evento === "vittoria" && contatoreVittoria > 1;
     if (!skipAudio && frasi.audioCounts && frasi.audioCounts[evento]) {
       const n = Math.floor(Math.random() * frasi.audioCounts[evento]) + 1;
@@ -674,4 +680,3 @@
 </script>
 </body>
 </html>
- 
