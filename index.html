@@ -111,6 +111,40 @@
       100% { background-color: transparent; }
     }
 
+    /* SCELTA POLIGONI */
+    .poligoni-scelta {
+      margin-bottom: 16px;
+    }
+
+    .poligoni-scelta p {
+      margin: 0 0 8px 0;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .poligoni-opzioni {
+      display: flex;
+      gap: 10px;
+    }
+
+    .poligoni-opzioni button {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #f2c200;
+      border-radius: 8px;
+      background: transparent;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .poligoni-opzioni button.selezionato {
+      background: #f2c200;
+      color: #0b2a4a;
+    }
+
     /* OVERLAY E SETUP */
     .hidden { display: none !important; }
     .btn-start { background: #CCCCFF; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
@@ -162,6 +196,13 @@
 
   <section id="setup" class="hidden">
     <h2>Inserisci i giocatori</h2>
+    <div class="poligoni-scelta">
+      <p>Numero di poligoni:</p>
+      <div class="poligoni-opzioni">
+        <button id="btn-2-poligoni" class="selezionato" onclick="scegliPoligoni(2)">2 poligoni</button>
+        <button id="btn-4-poligoni" onclick="scegliPoligoni(4)">4 poligoni</button>
+      </div>
+    </div>
     <div id="lista-input-giocatori"></div>
     <div class="setup-controls">
       <button id="btn-aggiungi-input" type="button">+ Aggiungi Giocatore</button>
@@ -202,6 +243,13 @@
   let eventoAttivo = null;
   let audioQueue = [];
   let isPlaying = false;
+  let numPoligoni = 2;
+
+  function scegliPoligoni(n) {
+    numPoligoni = n;
+    document.getElementById("btn-2-poligoni").classList.toggle("selezionato", n === 2);
+    document.getElementById("btn-4-poligoni").classList.toggle("selezionato", n === 4);
+  }
 
   const coloriBase = [
     { hex: "#0000CD", name: "Blu"}, { hex: "#FF0000", name: "Rosso"}, { hex: "#FFFF00", name: "Giallo" },
