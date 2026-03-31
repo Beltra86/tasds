@@ -181,24 +181,18 @@
     }
  
     #tabella-partita {
-      width: 100%;
       border-collapse: collapse;
       font-size: 12px;
-      min-width: 200px;
+      width: auto;
+      table-layout: auto;
     }
  
-    #tabella-partita th,
     #tabella-partita td {
       border: 1px solid #2a4a6a;
-      padding: 5px 4px;
+      padding: 3px 5px;
       text-align: center;
       white-space: nowrap;
-    }
- 
-    #tabella-partita th {
-      background: #0b2a4a;
-      font-weight: bold;
-      font-size: 11px;
+      vertical-align: middle;
     }
  
     #tabella-partita td:first-child {
@@ -218,10 +212,41 @@
       font-weight: bold;
     }
  
-    #tabella-partita td.cella-scatto { color: #4fc3f7; font-weight: bold; }
-    #tabella-partita td.cella-crisi  { color: #ef5350; font-weight: bold; }
-    #tabella-partita td.cella-punteggio { color: #ffffff; font-weight: bold; }
-    #tabella-partita td.cella-vittoria { color: #f2c200; font-weight: bold; }
+    /* Wrapper dentro ogni cella dati */
+    .cella-inner {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+ 
+    .cella-inner .cella-valore {
+      font-weight: bold;
+    }
+ 
+    .cella-inner .btn-cancella {
+      display: none;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 10px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+ 
+    .cella-inner.piena .btn-cancella {
+      display: inline;
+    }
+ 
+    .cella-inner .btn-cancella:hover {
+      color: #ef5350;
+    }
+ 
+    /* Colori valori */
+    td.cella-scatto .cella-valore    { color: #4fc3f7; }
+    td.cella-crisi .cella-valore     { color: #ef5350; }
+    td.cella-punteggio .cella-valore { color: #ffffff; }
+    td.cella-vittoria .cella-valore  { color: #f2c200; }
  
     @media (max-width: 400px) {
       #pulsanti { grid-template-columns: repeat(3, 1fr); }
@@ -457,7 +482,6 @@
  
   // --- LOGICA TABELLA ---
  
-  // Stato per ogni giocatore: quanti poligoni ha completato, quanti giri ha completato
   let statoGiocatori = [];
   let contatoreVittoria = 0;
  
@@ -465,35 +489,127 @@
     if (numPoligoni === 2) {
       return [
         { label: "Giocatori", tipo: "intestazione" },
-        { label: "Giro 1",    tipo: "giro",      indice: 0 },
-        { label: "Poligono 1",tipo: "poligono",  indice: 0 },
-        { label: "Giro 2",    tipo: "giro",      indice: 1 },
-        { label: "Poligono 2",tipo: "poligono",  indice: 1 },
-        { label: "Giro 3",    tipo: "giro",      indice: 2 },
-        { label: "Arrivo",    tipo: "arrivo"               }
+        { label: "Giro 1",    tipo: "giro",     indice: 0 },
+        { label: "Poligono 1",tipo: "poligono", indice: 0 },
+        { label: "Giro 2",    tipo: "giro",     indice: 1 },
+        { label: "Poligono 2",tipo: "poligono", indice: 1 },
+        { label: "Giro 3",    tipo: "giro",     indice: 2 },
+        { label: "Arrivo",    tipo: "arrivo"              }
       ];
     } else {
       return [
         { label: "Giocatori", tipo: "intestazione" },
-        { label: "Giro 1",    tipo: "giro",      indice: 0 },
-        { label: "Poligono 1",tipo: "poligono",  indice: 0 },
-        { label: "Giro 2",    tipo: "giro",      indice: 1 },
-        { label: "Poligono 2",tipo: "poligono",  indice: 1 },
-        { label: "Giro 3",    tipo: "giro",      indice: 2 },
-        { label: "Poligono 3",tipo: "poligono",  indice: 2 },
-        { label: "Giro 4",    tipo: "giro",      indice: 3 },
-        { label: "Poligono 4",tipo: "poligono",  indice: 3 },
-        { label: "Giro 5",    tipo: "giro",      indice: 4 },
-        { label: "Arrivo",    tipo: "arrivo"               }
+        { label: "Giro 1",    tipo: "giro",     indice: 0 },
+        { label: "Poligono 1",tipo: "poligono", indice: 0 },
+        { label: "Giro 2",    tipo: "giro",     indice: 1 },
+        { label: "Poligono 2",tipo: "poligono", indice: 1 },
+        { label: "Giro 3",    tipo: "giro",     indice: 2 },
+        { label: "Poligono 3",tipo: "poligono", indice: 2 },
+        { label: "Giro 4",    tipo: "giro",     indice: 3 },
+        { label: "Poligono 4",tipo: "poligono", indice: 3 },
+        { label: "Giro 5",    tipo: "giro",     indice: 4 },
+        { label: "Arrivo",    tipo: "arrivo"              }
       ];
     }
+  }
+ 
+  // Ricava lo stato di un giocatore leggendo direttamente le celle della tabella
+  function ricalcolaStato(gIdx) {
+    const righe = righeTabella();
+    let poligoniCompletati = 0;
+    let vittoria = false;
+ 
+    righe.forEach((riga, rigaIdx) => {
+      if (riga.tipo === "poligono") {
+        const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
+        if (cella && cella.dataset.valore) poligoniCompletati++;
+      }
+      if (riga.tipo === "arrivo") {
+        const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
+        if (cella && cella.dataset.valore) vittoria = true;
+      }
+    });
+ 
+    statoGiocatori[gIdx].poligoniCompletati = poligoniCompletati;
+ 
+    // Ricalcola contatoreVittoria leggendo tutte le celle arrivo
+    const rigaArrivo = righe.find(r => r.tipo === "arrivo");
+    const rigaArrivoIdx = righe.indexOf(rigaArrivo);
+    let cnt = 0;
+    giocatori.forEach((_, i) => {
+      const c = document.getElementById(`cella-${i}-r${rigaArrivoIdx}`);
+      if (c && c.dataset.valore) cnt++;
+    });
+    contatoreVittoria = cnt;
+  }
+ 
+  function scriviCella(cella, classeColore, valore) {
+    cella.className = classeColore;
+    cella.dataset.valore = valore;
+    cella.innerHTML = "";
+    const inner = document.createElement("span");
+    inner.className = "cella-inner piena";
+    const span = document.createElement("span");
+    span.className = "cella-valore";
+    span.textContent = valore;
+    const btnX = document.createElement("button");
+    btnX.className = "btn-cancella";
+    btnX.textContent = "×";
+    btnX.title = "Cancella";
+    btnX.onclick = (e) => {
+      e.stopPropagation();
+      const gIdx = parseInt(cella.id.split("-")[1]);
+      cancellaCella(cella, gIdx);
+    };
+    inner.appendChild(span);
+    inner.appendChild(btnX);
+    cella.appendChild(inner);
+  }
+ 
+  function cancellaCella(cella, gIdx) {
+    cella.className = "";
+    cella.dataset.valore = "";
+    cella.innerHTML = "";
+    // Ricalcola lo stato del giocatore in base a ciò che rimane nella tabella
+    ricalcolaStato(gIdx);
+    // Se era una cella arrivo, riassegna le posizioni a tutti
+    const righe = righeTabella();
+    const rigaArrivoIdx = righe.findIndex(r => r.tipo === "arrivo");
+    // Controlla se la cella cancellata era una cella arrivo
+    const idParts = cella.id.split("-");
+    const rigaIdx = parseInt(idParts[2].replace("r", ""));
+    if (rigaIdx === rigaArrivoIdx) {
+      riassegnaVittorie();
+    }
+  }
+ 
+  function riassegnaVittorie() {
+    // Raccoglie le celle arrivo che hanno ancora un valore e le riordina
+    const righe = righeTabella();
+    const rigaArrivoIdx = righe.findIndex(r => r.tipo === "arrivo");
+    const celle = giocatori.map((_, i) => document.getElementById(`cella-${i}-r${rigaArrivoIdx}`));
+    // Trova quelle compilate, in ordine di posizione attuale
+    const compilate = celle.filter(c => c && c.dataset.valore);
+    // Ordina per il numero della posizione già scritta (1°, 2°...)
+    compilate.sort((a, b) => {
+      const na = parseInt(a.dataset.valore);
+      const nb = parseInt(b.dataset.valore);
+      return na - nb;
+    });
+    // Azzera tutte le celle arrivo
+    celle.forEach(c => { if (c) { c.className = ""; c.dataset.valore = ""; c.innerHTML = ""; } });
+    // Riassegna le posizioni in ordine
+    const pos = ["1°","2°","3°","4°","5°","6°"];
+    compilate.forEach((c, i) => {
+      scriviCella(c, "cella-vittoria", pos[i] || `${i+1}°`);
+    });
+    contatoreVittoria = compilate.length;
   }
  
   function inizializzaTabella() {
     contatoreVittoria = 0;
     statoGiocatori = giocatori.map(() => ({
-      poligoniCompletati: 0,  // quanti poligoni ha completato
-      giriCoperti: 0          // quanti giri ha avuto un evento (scatto/crisi)
+      poligoniCompletati: 0
     }));
  
     const tabella = document.getElementById("tabella-partita");
@@ -502,26 +618,22 @@
  
     righe.forEach((riga, rigaIdx) => {
       const tr = document.createElement("tr");
- 
       if (riga.tipo === "poligono") tr.classList.add("riga-poligono");
       if (riga.tipo === "arrivo")   tr.classList.add("riga-arrivo");
  
-      // Prima colonna: etichetta riga
       const tdLabel = document.createElement("td");
       tdLabel.textContent = riga.label;
       tr.appendChild(tdLabel);
  
-      // Colonne giocatori
       giocatori.forEach((g, gIdx) => {
         const td = document.createElement("td");
-        // Nella riga intestazione mettiamo il nome del giocatore
+        td.id = `cella-${gIdx}-r${rigaIdx}`;
+        td.dataset.valore = "";
         if (riga.tipo === "intestazione") {
           td.textContent = g.nome;
           td.style.color = g.colore;
           td.style.fontWeight = "bold";
         }
-        // ID univoco per trovare la cella facilmente
-        td.id = `cella-${gIdx}-r${rigaIdx}`;
         tr.appendChild(td);
       });
  
@@ -533,39 +645,31 @@
     const righe = righeTabella();
  
     if (tipo === "scatto" || tipo === "crisi") {
-      // Il giro da compilare è il successivo all'ultimo poligono completato
-      // poligoniCompletati = 0 → Giro 1 (indice giro 0)
-      // poligoniCompletati = 1 → Giro 2 (indice giro 1) ecc.
       const indiceGiro = statoGiocatori[gIdx].poligoniCompletati;
-      // Trova la riga "giro" con quell'indice
       const rigaIdx = righe.findIndex(r => r.tipo === "giro" && r.indice === indiceGiro);
       if (rigaIdx === -1) return;
       const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
       if (!cella) return;
-      cella.textContent = valore; // "S" o "C"
-      cella.className = valore === "S" ? "cella-scatto" : "cella-crisi";
+      scriviCella(cella, valore === "S" ? "cella-scatto" : "cella-crisi", valore);
  
     } else if (tipo === "poligono") {
-      // Compila il primo poligono libero per questo giocatore
       const indice = statoGiocatori[gIdx].poligoniCompletati;
-      if (indice >= numPoligoni) return; // tutti i poligoni già completati
+      if (indice >= numPoligoni) return;
       const rigaIdx = righe.findIndex(r => r.tipo === "poligono" && r.indice === indice);
       if (rigaIdx === -1) return;
       const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
       if (!cella) return;
-      cella.textContent = valore; // es. "3"
-      cella.className = "cella-punteggio";
+      scriviCella(cella, "cella-punteggio", valore);
       statoGiocatori[gIdx].poligoniCompletati++;
  
     } else if (tipo === "vittoria") {
       const rigaIdx = righe.findIndex(r => r.tipo === "arrivo");
       if (rigaIdx === -1) return;
       const cella = document.getElementById(`cella-${gIdx}-r${rigaIdx}`);
-      if (!cella) return;
+      if (!cella || cella.dataset.valore) return; // già compilata
       contatoreVittoria++;
       const pos = ["1°","2°","3°","4°","5°","6°"];
-      cella.textContent = pos[contatoreVittoria - 1] || `${contatoreVittoria}°`;
-      cella.className = "cella-vittoria";
+      scriviCella(cella, "cella-vittoria", pos[contatoreVittoria - 1] || `${contatoreVittoria}°`);
     }
   }
  
