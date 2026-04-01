@@ -82,7 +82,7 @@
     }
  
     #cronaca {
-      background: #333333;
+      background: #1a1a1a;
       padding: 10px;
       border-radius: 12px;
       border: 2px solid #0b2a4a;
@@ -147,7 +147,7 @@
  
     /* OVERLAY E SETUP */
     .hidden { display: none !important; }
-    .btn-start { background: #CCCCFF; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
+    .btn-start { background: #0b2a4a; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
     .giocatore-row { display: flex; gap: 5px; margin-bottom: 8px; width: 100%; }
     .giocatore-row input { flex: 1; padding: 10px; border-radius: 5px; border: none; min-width: 0; }
     .select-colore { width: 200px; border-radius: 5px; border: 1px solid white; color: #000000; }
@@ -168,9 +168,9 @@
     }
  
     #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 10px; }
-    .overlay-box { background: #333333; color: white; padding: 20px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; }
+    .overlay-box { background: #1a1a1a; color: white; padding: 20px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; }
     #listaGiocatori { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 15px 0; }
-    #listaGiocatori button { color: #333333; padding: 12px 5px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; }
+    #listaGiocatori button { color: white; padding: 12px 5px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; }
  
     /* TABELLA PARTITA */
     #tabella-wrap {
@@ -194,6 +194,7 @@
       text-align: center;
       white-space: nowrap;
       vertical-align: middle;
+      min-width: 65px;
     }
  
     #tabella-partita td:first-child {
@@ -332,8 +333,8 @@
   }
  
   const coloriBase = [
-    { hex: "#2E2EFF", name: "Blu"}, { hex: "#FF0000", name: "Rosso"}, { hex: "#FFFF00", name: "Giallo" },
-    { hex: "#228B22", name: "Verde"}, { hex: "#800080", name: "Viola"}, { hex: "#531B00", name: "Marrone" }
+    { hex: "#0066FF", name: "Blu"}, { hex: "#FF0000", name: "Rosso"}, { hex: "#FFFF00", name: "Giallo" },
+    { hex: "#228B22", name: "Verde"}, { hex: "#9933FF", name: "Viola"}, { hex: "#531B00", name: "Marrone" }
   ];
  
   const sections = {
